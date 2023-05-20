@@ -2,7 +2,9 @@ const express = require("express");
 const path = require("path");
 const app = express();
 let egyptianIp = false;
-let coolDown = 0;
+let reqestCount = 0;
+let reqestLimit = 1000;
+let reqestTimeLimit = 5 * 1000;
 let lastRequest = Date.now();
 
 app.get("/egip", (req, res) => {
@@ -10,32 +12,23 @@ app.get("/egip", (req, res) => {
   res.sendStatus(200);
 });
 
-app.get("/cooldown", (req, res) => {
-  if (coolDown == 0) {
-    coolDown = 5 * 1000;
-  } else {
-    coolDown = 0;
-  }
-  res.sendStatus(200);
-});
-
 app.use("*", (req, res, next) => {
-  console.log(req.ip);
-  console.log(egyptianIp);
-  console.log(coolDown);
-  console.log(lastRequest);
-  if (coolDown != 0 && Date.now() - lastRequest < coolDown) {
-  } else {
+  console.log(reqestCount);
+    if (limit()) {
     lastRequest = Date.now();
     if (egyptianIp) {
       if (detector.isEgyptianIp(detector.parseIp(req.ip))) {
+        reqestCount++;
         next();
       } else {
         res.send("Not egyptian ip :(");
       }
     } else {
+      reqestCount++;
       next();
     }
+  } else {
+    res.sendStatus(500);
   }
 });
 
@@ -46,3 +39,15 @@ app.get("*", (req, res) => {
 app.listen(8080, () => {
   console.log("running :)");
 });
+
+function limit() {
+  if (Date.now() - lastRequest > reqestTimeLimit) {
+    lastRequest = Date.now();
+    reqestCount = 0;
+    return true;
+  }
+  if (reqestCount >= reqestLimit) {
+    return false;
+  }
+  return true;
+}
