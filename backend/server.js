@@ -13,8 +13,8 @@ app.get("/egip", (req, res) => {
 });
 
 app.use("*", (req, res, next) => {
-  console.log(reqestCount);
-    if (limit()) {
+  // console.log(reqestCount);
+  if (limit()) {
     lastRequest = Date.now();
     if (egyptianIp) {
       if (detector.isEgyptianIp(detector.parseIp(req.ip))) {
